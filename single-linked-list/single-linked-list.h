@@ -80,7 +80,9 @@ class SingleLinkedList {
         // Инкремент итератора, не указывающего на существующий элемент списка, приводит к неопределённому поведению
         BasicIterator& operator++() noexcept {
             /* изменяем текущий объект */
-            node_ = node_->next_node;
+            if (node_) {
+                node_ = node_->next_node;
+            }
 
             return *this;
         }
@@ -149,16 +151,12 @@ public:
         SingleLinkedList<Type> tmp;
 
         /* скопировать внутрь tmp элементы other */
-        try {
-            Node* curNode = &tmp.head_;
-            for(const auto& var : other){
-                curNode->next_node = new Node(var, curNode->next_node);
-                curNode = curNode->next_node;
-            }
-            tmp.size_ = other.GetSize();
-        } catch (...) {
-            throw;
+        Node* curNode = &tmp.head_;
+        for(const auto& var : other){
+            curNode->next_node = new Node(var, curNode->next_node);
+            curNode = curNode->next_node;
         }
+        tmp.size_ = other.GetSize();
 
         // После того как элементы скопированы, обмениваем данные текущего списка и tmp
         this->swap(tmp);
@@ -179,12 +177,8 @@ public:
     // Обменивает содержимое списков за время O(1)
     void swap(SingleLinkedList& other) noexcept {
         // Реализуйте обмен содержимого списков самостоятельно
-        auto tmpHead_next_node = other.head_.next_node;
-        auto tmpSize = other.size_;
-        other.head_.next_node = head_.next_node;
-        other.size_ = size_;
-        head_.next_node = tmpHead_next_node;
-        size_ = tmpSize;
+        std::swap(head_.next_node, other.head_.next_node);
+        std::swap(size_, other.size_);
     }
 
     ~SingleLinkedList() {
@@ -200,19 +194,15 @@ public:
     // Сообщает, пустой ли список за время O(1)
     [[nodiscard]] bool IsEmpty() const noexcept {
         // Заглушка. Реализуйте метод самостоятельно
-        return !size_;
+        return size_>0 ? true : false;
     }
 
     // Вставляет элемент value в начало списка за время O(1)
     void PushFront(const Type& value) {
         // Реализуйте метод самостоятельно
-        try {
-            head_.next_node = new Node(value, head_.next_node);
-            ++size_;
-        }
-        catch (...) {
-            throw;
-        }
+        head_.next_node = new Node(value, head_.next_node);
+        ++size_;
+
     }
 
     // Очищает список за время O(N)
@@ -232,7 +222,8 @@ public:
      * Если при создании элемента будет выброшено исключение, список останется в прежнем состоянии
      */
     Iterator InsertAfter(ConstIterator pos, const Type& value) {
-        // Заглушка. Реализуйте метод самостоятельно
+        assert(pos.node_ != nullptr);
+
         Node* insertNode = new Node(value, pos.node_->next_node);
         pos.node_->next_node = insertNode;
         ++size_;
@@ -241,9 +232,8 @@ public:
     }
 
     void PopFront() noexcept {
-        if (!size_) {
-            return;
-        }
+        assert(IsEmpty());
+
         auto delNode = head_.next_node;
         head_.next_node = delNode->next_node;
         --size_;
@@ -255,6 +245,9 @@ public:
      * Возвращает итератор на элемент, следующий за удалённым
      */
     Iterator EraseAfter(ConstIterator pos) noexcept {
+        assert(IsEmpty());
+        assert(pos.node_ != nullptr);
+
         Node* delNode = pos.node_->next_node;
         pos.node_->next_node = pos.node_->next_node->next_node;
         delete delNode;
