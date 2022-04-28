@@ -80,9 +80,8 @@ class SingleLinkedList {
         // Инкремент итератора, не указывающего на существующий элемент списка, приводит к неопределённому поведению
         BasicIterator& operator++() noexcept {
             /* изменяем текущий объект */
-            if (node_) {
-                node_ = node_->next_node;
-            }
+            assert(node_ != nullptr);
+            node_ = node_->next_node;
 
             return *this;
         }
@@ -101,6 +100,7 @@ class SingleLinkedList {
         // Вызов этого оператора у итератора, не указывающего на существующий элемент списка,
         // приводит к неопределённому поведению
         [[nodiscard]] reference operator*() const noexcept {
+            assert(node_ != nullptr);
             return node_->value;
         }
 
@@ -108,6 +108,7 @@ class SingleLinkedList {
         // Вызов этого оператора у итератора, не указывающего на существующий элемент списка,
         // приводит к неопределённому поведению
         [[nodiscard]] pointer operator->() const noexcept {
+            assert(node_ != nullptr);
             return &(node_->value);
         }
 
@@ -137,8 +138,7 @@ public:
     }
 
     SingleLinkedList(std::initializer_list<Type> values) : SingleLinkedList() {
-        // Реализуйте конструктор самостоятельно
-        if (!values.size()) {
+        if (std::empty(values)) {
             return;
         }
         for (auto rit = std::rbegin(values); rit != std::rend(values); ++rit) {
@@ -165,7 +165,7 @@ public:
 
     SingleLinkedList& operator=(const SingleLinkedList& rhs) {
         // Реализуйте присваивание самостоятельно
-        if(this->begin() == rhs.begin()){
+        if(this == rhs){
             return *this;
         }
         SingleLinkedList<Type> tmp(rhs);
@@ -187,14 +187,12 @@ public:
 
     // Возвращает количество элементов в списке за время O(1)
     [[nodiscard]] size_t GetSize() const noexcept {
-        // Заглушка. Реализуйте метод самостоятельно
         return size_;
     }
 
     // Сообщает, пустой ли список за время O(1)
     [[nodiscard]] bool IsEmpty() const noexcept {
-        // Заглушка. Реализуйте метод самостоятельно
-        return size_>0 ? true : false;
+        return size_ == 0;
     }
 
     // Вставляет элемент value в начало списка за время O(1)
@@ -232,7 +230,7 @@ public:
     }
 
     void PopFront() noexcept {
-        assert(IsEmpty());
+        assert(!IsEmpty());
 
         auto delNode = head_.next_node;
         head_.next_node = delNode->next_node;
@@ -245,7 +243,7 @@ public:
      * Возвращает итератор на элемент, следующий за удалённым
      */
     Iterator EraseAfter(ConstIterator pos) noexcept {
-        assert(IsEmpty());
+        assert(!IsEmpty());
         assert(pos.node_ != nullptr);
 
         Node* delNode = pos.node_->next_node;
